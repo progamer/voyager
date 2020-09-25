@@ -11,6 +11,14 @@ abstract class SchemaManager
 {
     // todo: trim parameters
 
+    public static function connection()
+    {
+        if(cache()->has('ACTIVE_CONNECTION')){
+            return DB::connection(cache()->get('ACTIVE_CONNECTION'));
+        }
+        return DB::connection();
+    }
+
     public static function __callStatic($method, $args)
     {
         return static::manager()->$method(...$args);
@@ -18,12 +26,12 @@ abstract class SchemaManager
 
     public static function manager()
     {
-        return DB::connection()->getDoctrineSchemaManager();
+        return static::connection()->getDoctrineSchemaManager();
     }
 
     public static function getDatabaseConnection()
     {
-        return DB::connection()->getDoctrineConnection();
+        return static::connection()->getDoctrineConnection();
     }
 
     public static function tableExists($table)

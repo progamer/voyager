@@ -119,6 +119,8 @@ Route::group(['as' => 'voyager.'], function () {
 
         // Database Routes
         Route::resource('database', $namespacePrefix.'VoyagerDatabaseController');
+        Route::get('database/switch-database/{connection}', $namespacePrefix.'VoyagerDatabaseController@switchDatabase')
+        ->name('database.switch-database');
 
         // Compass Routes
         Route::group([

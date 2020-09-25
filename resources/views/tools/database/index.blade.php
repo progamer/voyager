@@ -3,11 +3,29 @@
 @section('page_title', __('voyager::generic.viewing').' '.__('voyager::generic.database'))
 
 @section('page_header')
-    <h1 class="page-title">
+    <h1 class="page-title col-md-6">
         <i class="voyager-data"></i> {{ __('voyager::generic.database') }}
+
+    </h1>
+    <span class="col-md-5 text-right">
+
+        <button
+            class="btn btn-primary dropdown-toggle"
+            type="button" id="dropdownMenuDatabase"
+            data-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false"
+        >
+                {{cache()->get('ACTIVE_CONNECTION', 'Mysql')}}
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuDatabase">
+                @foreach(config('database.connections') as $key => $connection)
+                    <li><a href="{{route('voyager.database.switch-database', ['connection' => $key])}}">{{$key}}</a></li>
+                @endforeach
+            </ul>
         <a href="{{ route('voyager.database.create') }}" class="btn btn-success"><i class="voyager-plus"></i>
             {{ __('voyager::database.create_new_table') }}</a>
-    </h1>
+    </span>
 @stop
 
 @section('content')
@@ -24,6 +42,7 @@
                             <th style="text-align:right" colspan="2">{{ __('voyager::database.table_actions') }}</th>
                         </tr>
                     </thead>
+
 
                 @foreach($tables as $table)
                     @continue(in_array($table->name, config('voyager.database.tables.hidden', [])))

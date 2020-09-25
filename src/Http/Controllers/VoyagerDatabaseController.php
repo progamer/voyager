@@ -20,6 +20,11 @@ use TCG\Voyager\Facades\Voyager;
 
 class VoyagerDatabaseController extends Controller
 {
+    public function switchDatabase($connection){
+        cache()->set('ACTIVE_CONNECTION', $connection);
+        return redirect()->back()->with($this->alertSuccess("Connection updated."));
+    }
+
     public function index()
     {
         $this->authorize('browse_database');
