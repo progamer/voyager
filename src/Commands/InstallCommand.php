@@ -4,7 +4,6 @@ namespace TCG\Voyager\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Intervention\Image\ImageServiceProviderLaravel5;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Process\Process;
 use TCG\Voyager\Providers\VoyagerDummyServiceProvider;
@@ -73,22 +72,23 @@ class InstallCommand extends Command
         $tags = ['seeds'];
 
         $this->call('vendor:publish', ['--provider' => VoyagerServiceProvider::class, '--tag' => $tags]);
-        $this->call('vendor:publish', ['--provider' => ImageServiceProviderLaravel5::class]);
 
         $this->info('Migrating the database tables into your application');
         $this->call('migrate', ['--force' => $this->option('force')]);
 
         $this->info('Attempting to set Voyager User model as parent to App\User');
-        if (file_exists(app_path('User.php'))) {
-            $str = file_get_contents(app_path('User.php'));
+        if (file_exists(app_path('User.php')) || file_exists(app_path('Models/User.php'))) {
+            $userPath = file_exists(app_path('User.php')) ? app_path('User.php') : app_path('Models/User.php');
+
+            $str = file_get_contents($userPath);
 
             if ($str !== false) {
                 $str = str_replace('extends Authenticatable', "extends \TCG\Voyager\Models\User", $str);
 
-                file_put_contents(app_path('User.php'), $str);
+                file_put_contents($userPath, $str);
             }
         } else {
-            $this->warn('Unable to locate "app/User.php".  Did you move this file?');
+            $this->warn('Unable to locate "User.php" in app or app/Models.  Did you move this file?');
             $this->warn('You will need to update this manually.  Change "extends Authenticatable" to "extends \TCG\Voyager\Models\User" in your User model');
         }
 
@@ -96,7 +96,7 @@ class InstallCommand extends Command
 
         $composer = $this->findComposer();
 
-        $process = new Process($composer.' dump-autoload');
+        $process = new Process([$composer.' dump-autoload']);
         $process->setTimeout(null); // Setting timeout to null to prevent installation from stopping at a certain point in time
         $process->setWorkingDirectory(base_path())->run();
 
@@ -108,10 +108,6 @@ class InstallCommand extends Command
                 "\n\nRoute::group(['prefix' => 'admin'], function () {\n    Voyager::routes();\n});\n"
             );
         }
-
-        \Route::group(['prefix' => 'admin'], function () {
-            \Voyager::routes();
-        });
 
         $this->info('Seeding data into the database');
         $this->seed('VoyagerDatabaseSeeder');
